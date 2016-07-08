@@ -18,68 +18,54 @@ namespace SupervisorioCheetah
     public partial class MainWindow : Window
     {
         private SerialPort conexao { get; set; }
-        //public Queue<double>[] dados { get; set; }
-        int numeroCanais = 0;
-        Dados d = new Dados();
-        Random r;
-
-        List<Queue<double>> dados;
-
         private string porta = "COM3";
         private int baundRate = 9600;
+        int numeroCanais = 0;
 
+        Queue<double>[] dados;
 
-        public enum canais
-        {
-            acelX, acelY, acelZ,
-            yaw, pitch, roll,
-            latitude, longitude,
-            posicaoX, posicaoY,
-            anguloVolante,
-            velocidade1, velocidade2, velocidade3, velocidade4, velocidadeCarro, velocidadeGPS,
-            freioDianteiro, freioTraseiro,
-            rotacaoMotor
-        };
+        List<SingleChart> charts = new List<SingleChart>();
+
+        // try to change might be lower or higher than the rendering interval
+        private const int UpdateInterval = 150;
+        private bool disposed;
+        private readonly Timer timer;
+        private int numberOfSeries;
 
         public MainWindow()
         {
             InitializeComponent();
-            // this.DataContext = new MainViewModel();
             this.DataContext = this;
             plot1.ActualController.UnbindAll();
 
 
-            numeroCanais = Enum.GetNames(typeof(canais)).Length;
-            dados = new List<Queue<double>>(numeroCanais);
-            for(int i = 0; i < dados.Count; i++)
+            charts.Add(new SingleChart());
+            charts[0].listaSensores[0].IsSelected = true;
+            charts[0].listaSensores[2].IsSelected = true;
+            charts[0].listaSensores[4].IsSelected = true;
+            charts[0].listaSensores[7].IsSelected = true;
+            charts.Add(new SingleChart());
+            charts[1].listaSensores[3].IsSelected = true;
+            charts[1].listaSensores[8].IsSelected = true;
+            charts[1].listaSensores[6].IsSelected = true;
+            charts[1].listaSensores[5].IsSelected = true;
+
+
+
+            // inicia uma lista de lista de dados com o tamanho do enum de sensores
+            numeroCanais = Enum.GetNames(typeof(Sensores)).Length;
+            dados = new Queue<double>[numeroCanais];
+            for (int i = 0; i < dados.Length; i++)
             {
                 dados[i] = new Queue<double>();
             }
-
-            
-
-            r = new Random();
+            conexao = new SerialPort(this.porta, this.baundRate);
+            abrirComunicação(this.porta, this.baundRate);
 
             this.timer = new Timer(OnTimerElapsed);
-
             this.SetupModel();
-
-            conexao = new SerialPort(this.porta, this.baundRate);
-
-            //dados = new Queue<double>[this.numeroCanais];
-
-            d = new Dados();
-            abrirComunicação(this.porta, this.baundRate);
         }
 
-
-        // try to change might be lower or higher than the rendering interval
-        private const int UpdateInterval = 200;
-
-        private bool disposed;
-        private readonly Timer timer;
-        private int numberOfSeries;
-        private Queue<Dados> listaDados;
 
         private void SetupModel()
         {
@@ -87,6 +73,9 @@ namespace SupervisorioCheetah
 
             PlotModel = new PlotModel();
             PlotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -2, Maximum = 55 });
+
+
+
 
             this.numberOfSeries = 1;
 
@@ -106,9 +95,11 @@ namespace SupervisorioCheetah
 
         private void OnTimerElapsed(object state)
         {
+            getData();
+
             lock (this.PlotModel.SyncRoot)
             {
-                this.getData();
+                this.plotChart();
             }
 
             this.PlotModel.InvalidatePlot(true);
@@ -116,19 +107,16 @@ namespace SupervisorioCheetah
 
         private void getData()
         {
-            #region
             int tmpRead = 0;
             int dadoParcial = 0;
             int dado = 0;
             int canal = 0;
             int estado = 0;
 
-
             try
             {
                 if (conexao.IsOpen)
                 {
-                    listaDados = new Queue<Dados>();
                     while (conexao.BytesToRead > 0)
                     {
                         #region Nova Maquina de Estado
@@ -246,217 +234,11 @@ namespace SupervisorioCheetah
                                 {
                                     dado |= (tmpRead & 0x1F); // Recebe os 5 digitos menos significativos
 
-                                    #region Verifica qual o canal para adicionar na classe
-                                    switch (canal)
-                                    {
-                                        case ((int)canais.acelX):
-                                            if (d._acelX)
-                                            {
-                                                updateChart();
-                                                //listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d.AcelX = (double)dado;
-                                            d._acelX = true;
-                                            break;
-                                        case ((int)canais.acelY):
-                                            if (d._acelY)
-                                            {
-                                                updateChart();
-                                                //listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d.AcelY = (double)dado;
-                                            d._acelY = true;
-                                            break;
-                                        case ((int)canais.acelZ):
-                                            if (d._acelZ)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d.AcelZ = (double)dado;
-                                            d._acelZ = true;
-                                            break;
-                                        case ((int)canais.anguloVolante):
-                                            if (d._anguloVolante)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._anguloVolante = true;
-                                            d.AnguloVolante = dado;
-                                            break;
-                                        case ((int)canais.freioDianteiro):
-                                            if (d._freioDianteiro)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._freioDianteiro = true;
-                                            d.FreioDianteiro = dado;
-                                            break;
-                                        case ((int)canais.freioTraseiro):
-                                            if (d._freioTraseiro)
-                                            {
-                                                updateChart();
-                                                //listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._freioTraseiro = true;
-                                            d.FreioTraseiro = dado;
-                                            break;
-                                        case ((int)canais.latitude):
-                                            if (d._Latitude)
-                                            {
-                                                updateChart();
-                                                //listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._Latitude = true;
-                                            d.Latitude = (double)dado;
-                                            break;
-                                        case ((int)canais.longitude):
-                                            if (d._Longitude)
-                                            {
-                                                updateChart();
-                                                //listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._Longitude = true;
-                                            d.Longitude = dado;
-                                            break;
-
-                                        case ((int)canais.pitch):
-                                            if (d._pitch)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._pitch = true;
-                                            d.Pitch = (double)dado;
-                                            break;
-                                        case ((int)canais.posicaoX):
-                                            if (d._posicaoX)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._posicaoX = true;
-                                            d.PosicaoX = (double)dado;
-                                            break;
-                                        case ((int)canais.posicaoY):
-                                            if (d._posicaoY)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._posicaoY = true;
-                                            d.PosicaoY = (double)dado;
-                                            break;
-                                        case ((int)canais.roll):
-                                            if (d._roll)
-                                            {
-                                                updateChart();
-                                                //  listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._roll = true;
-                                            d.Roll = (double)dado;
-                                            break;
-                                        case ((int)canais.rotacaoMotor):
-                                            if (d._rotacaoMotor)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._rotacaoMotor = true;
-                                            d.RotacaoMotor = dado;
-                                            break;
-                                        case ((int)canais.velocidade1):
-                                            if (d._velocidade1)
-                                            {
-                                                updateChart();
-                                                //  listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._velocidade1 = true;
-                                            d.Velocidade1 = dado;
-                                            break;
-                                        case ((int)canais.velocidade2):
-                                            if (d._velocidade2)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._velocidade2 = true;
-                                            d.Velocidade2 = dado;
-                                            break;
-                                        case ((int)canais.velocidade3):
-                                            if (d._velocidade3)
-                                            {
-                                                updateChart();
-                                                //  listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._velocidade3 = true;
-                                            d.Velocidade3 = dado;
-                                            break;
-                                        case ((int)canais.velocidade4):
-                                            if (d._velocidade4)
-                                            {
-                                                updateChart();
-                                                //  listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._velocidade4 = true;
-                                            d.Velocidade4 = dado;
-                                            break;
-                                        case ((int)canais.velocidadeCarro):
-                                            if (d._velocidadeCarro)
-                                            {
-                                                // listaDados.Enqueue(d);
-                                                updateChart();
-                                                d = new Dados();
-                                            }
-                                            d._velocidadeCarro = true;
-                                            d.VelocidadeCarro = dado;
-                                            break;
-                                        case ((int)canais.velocidadeGPS):
-                                            if (d._velocidadeGPS)
-                                            {
-                                                updateChart();
-                                                //listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._velocidadeGPS = true;
-                                            d.VelocidadeGPS = dado;
-                                            break;
-                                        case ((int)canais.yaw):
-                                            if (d._yaw)
-                                            {
-                                                updateChart();
-                                                // listaDados.Enqueue(d);
-                                                d = new Dados();
-                                            }
-                                            d._yaw = true;
-                                            d.Yaw = dado;
-                                            break;
-                                    }
-                                    #endregion
-
-
+                                    this.dados[canal].Enqueue(dado);
                                 }
                                 estado = 0;
-                                d.Tempo = DateTime.Now;
+                                dado = 0;
+                                canal = 0;
                                 break;
                         }
                         #endregion
@@ -465,37 +247,24 @@ namespace SupervisorioCheetah
                 }
             }
             catch { }
-            #endregion
-
         }
 
         private void plotChart()
         {
-            int n = 0;
-
-            for (int i = 0; i < PlotModel.Series.Count; i++)
+            if (dados[0].Count > 0)
             {
-                var s = (LineSeries)PlotModel.Series[i];
+                for (int i = 0; i < PlotModel.Series.Count; i++)
+                {
+                    var s = (LineSeries)PlotModel.Series[i];
 
+                    // Coloca limite no eixo horizontal
+                    double x = s.Points.Count > 0 ? s.Points[s.Points.Count - 1].X + 1 : 0;
+                    if (s.Points.Count >= 500)
+                        s.Points.RemoveAt(0);
 
-                double x = s.Points.Count > 0 ? s.Points[s.Points.Count - 1].X + 1 : 0;
-                if (s.Points.Count >= 200)
-                    s.Points.RemoveAt(0);
-                double y = 0;
-                int m = 80;
-                for (int j = 0; j < m; j++)
-                    y += Math.Cos(0.001 * x * j * j);
-                y /= m;
-                s.Points.Add(new DataPoint(x, r.Next(0, 50)));
-
-
-                n += s.Points.Count;
-            }
-
-            if (this.TotalNumberOfPoints != n)
-            {
-                this.TotalNumberOfPoints = n;
-                this.RaisePropertyChanged("TotalNumberOfPoints");
+                    // Adiciona valor ao gráfico -------------------------------------------------------------------------
+                    s.Points.Add(new DataPoint(x, dados[0].Dequeue()));
+                }
             }
         }
 
@@ -509,7 +278,6 @@ namespace SupervisorioCheetah
                 handler(this, new PropertyChangedEventArgs(property));
             }
         }
-
 
         /// <summary>
         /// Abre a conexão serial.
@@ -539,9 +307,8 @@ namespace SupervisorioCheetah
                 this.baundRate = _frequencia;
 
             }
-            catch (InvalidOperationException e)
+            catch
             {
-
                 return false;
             }
 
@@ -557,7 +324,6 @@ namespace SupervisorioCheetah
         {
             conexao.Close();
         }
-
 
         public void Dispose()
         {
@@ -576,6 +342,12 @@ namespace SupervisorioCheetah
             }
 
             this.disposed = true;
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var t = new ConfigurarGraficos(charts);
+            t.ShowDialog();
         }
     }
 }
