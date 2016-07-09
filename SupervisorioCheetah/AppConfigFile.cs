@@ -9,82 +9,139 @@ using System.Collections.ObjectModel;
 
 namespace SupervisorioCheetah
 {
-    class AppConfigFile
-    {
-        Configuration config;
-        private ObservableCollection<BoolStringClass> listaSensores;
-        public AppConfigFile()
-        {
-            config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-
-            ChartSection s = ChartSection.open("chartsCollection");
-            //ChartsConfigSection g = (ChartsConfigSection)config.GetSection("chartsCollection");
-        }
-
-        public void addKey(string key, string value)
-        {
-            config.AppSettings.Settings.Add(key, value);
-        }
-
-        public void removeKey(string key)
-        {
-            config.AppSettings.Settings.Remove(key);
-        }
-
-        public void addChartKeys(SingleChart singleChart)
-        {
-            foreach (BoolStringClass s in singleChart.listaSensores)
-            {
-                addKey(s.TheText, s.IsSelected.ToString());
-            }
-        }
-
-        public void addChartKeys(List<SingleChart> chart)
-        {
-            foreach (SingleChart s in chart)
-            {
-                addChartKeys(s);
-            }
-        }
-
-    }
-
-
-    public class ChartSection : ConfigurationSection
+   public class ChartSection : ConfigurationSection
     {
         private static ChartSection instance;
+
         private ChartSection() { }
 
-        public static ChartSection open(string section)
+        public static void addChart(List<SingleChart> chartList)
         {
-            return open(System.Reflection.Assembly.GetEntryAssembly().Location, section);
-        }
-        public static ChartSection open(string path, string section)
-        {
-            if ((object)instance == null)
+            foreach (SingleChart s in chartList)
             {
-                if (path.EndsWith(".config", StringComparison.InvariantCultureIgnoreCase))
-                { path = path.Remove(path.Length - 7); }
-
-                Configuration config = ConfigurationManager.OpenExeConfiguration(path);
-
-                if (config.Sections[section] == null)
-                {
-                    instance = new ChartSection();
-                    config.Sections.Add(section, instance);
-                    config.Save(ConfigurationSaveMode.Modified);
-                }
-                else
-                { instance = (ChartSection)config.Sections[section]; }
+                addChart(s);
             }
-            return instance;
         }
 
-        [ConfigurationProperty("charts")]
-        public ChartsCollection Members
+        public static void addChart(SingleChart singleChart)
         {
-            get { return ((ChartsCollection)base["charts"]); }
-            set { base["charts"] = value; }
+            string path = System.Reflection.Assembly.GetEntryAssembly().Location;
+
+            if (path.EndsWith(".config", StringComparison.InvariantCultureIgnoreCase))
+            { path = path.Remove(path.Length - 7); }
+
+            Configuration config = ConfigurationManager.OpenExeConfiguration(path);
+
+            int index = 0;
+            while (config.Sections["chart" + index.ToString()] != null)
+            {
+                index++;
+            }
+
+            addSensors(singleChart.listaSensores);
+
+            if (config.Sections["chart" + index.ToString()] == null)
+            {
+                config.Sections.Add("chart" + index.ToString(), instance);
+                config.Save(ConfigurationSaveMode.Modified);
+            }
+            instance = (ChartSection)config.Sections["chart" + index.ToString()];
+        }
+        
+
+        public static void addSensors(ObservableCollection<BoolStringClass> lista)
+        {
+            chartElement ch;
+            instance = new ChartSection();
+
+            foreach (BoolStringClass b in lista)
+            {
+                ch = new chartElement();
+                ch.sensor = b.TheText;
+                ch.isSelected = b.IsSelected.ToString();
+
+                instance.myChart.Add(ch);
+            }
+        }
+
+        public static void removeAllCharts()
+        {
+            string path = System.Reflection.Assembly.GetEntryAssembly().Location;
+
+            if (path.EndsWith(".config", StringComparison.InvariantCultureIgnoreCase))
+            { path = path.Remove(path.Length - 7); }
+
+            Configuration config = ConfigurationManager.OpenExeConfiguration(path);
+
+            int index = 0;
+            while (config.Sections["chart" + index.ToString()] != null)
+            {
+                config.Sections.Remove("chart" + index.ToString());
+                index++;
+            }
+
+            config.Save(ConfigurationSaveMode.Modified);
+        }
+        
+        public static SingleChart getSingleChart(ChartSection instance)
+        {
+            ObservableCollection<BoolStringClass> lista = new ObservableCollection<BoolStringClass>();
+
+            foreach (chartElement cht in instance.myChart)
+            {
+                foreach (Sensores s in Enum.GetValues(typeof(Sensores)))
+                {
+                    if (cht.sensor == s.ToString())
+                    {
+                        lista.Add(new BoolStringClass { IsSelected = Convert.ToBoolean(cht.isSelected), TheText = cht.sensor });
+                        break;
+                    }
+                }
+            }
+            return new SingleChart(lista);
+        }
+
+        public static List<SingleChart> getAllCharts()
+        {
+            string path = System.Reflection.Assembly.GetEntryAssembly().Location;
+
+            if (path.EndsWith(".config", StringComparison.InvariantCultureIgnoreCase))
+            { path = path.Remove(path.Length - 7); }
+
+            Configuration config = ConfigurationManager.OpenExeConfiguration(path);
+            List<SingleChart> charts = new List<SingleChart>();
+
+            int index = 0;
+            while (config.Sections["chart" + index.ToString()] != null)
+            {
+                charts.Add( getSingleChart((ChartSection)config.Sections["chart" + index.ToString()]));
+                index++;
+            }
+            return charts;
+        }
+
+        [ConfigurationProperty("chart")]
+        public ChartsCollection myChart
+        {
+            get { return ((ChartsCollection)base["chart"]); }
+            set { base["chart"] = value; }
+        }
+    }
+
+    public class chartElement : ConfigurationElement
+    { 
+        [ConfigurationProperty("sensor", DefaultValue = "", IsKey = true, IsRequired = false)]
+        public string sensor
+        {
+            get { return ((string)(base["sensor"])); }
+            set { base["sensor"] = value; }
+        }
+
+        [ConfigurationProperty("isSelected", DefaultValue = "", IsKey = false, IsRequired = true)]
+        public string isSelected
+        {
+            get { return ((string)(base["isSelected"])); }
+            set { base["isSelected"] = value; }
         }
     }
 
@@ -102,23 +159,24 @@ namespace SupervisorioCheetah
         public chartElement this[int idx]
         {
             get { return (chartElement)BaseGet(idx); }
+            set
+            {
+                if (BaseGet(idx) != null)
+                { BaseRemoveAt(idx); }
+                BaseAdd(idx, value);
+            }
         }
-    }
-
-    public class chartElement : ConfigurationElement
-    {
-        [ConfigurationProperty("sensor", DefaultValue = "", IsKey = true, IsRequired = false)]
-        public string sensor
+        public void Add(chartElement ch)
         {
-            get { return ((string)(base["sensor"])); }
-            set { base["sensor"] = value; }
+            BaseAdd(ch);
         }
-
-        [ConfigurationProperty("isSelected", DefaultValue = "", IsKey = false, IsRequired = true)]
-        public string isSelected
+        public void Clear()
         {
-            get { return ((string)(base["isSelected"])); }
-            set { base["isSelected"] = value; }
+            BaseClear();
+        }
+        public void RemoveAt(int idx)
+        {
+            BaseRemoveAt(idx);
         }
     }
 }

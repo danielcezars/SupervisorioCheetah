@@ -22,6 +22,10 @@ namespace SupervisorioCheetah
                 listaSensores.Add(new BoolStringClass { IsSelected = false, TheText = s.ToString() });
             }
         }
+        public SingleChart(ObservableCollection<BoolStringClass> listaSensores)
+        {
+            this.listaSensores = listaSensores;
+        }
     }
 
     public class BoolStringClass
