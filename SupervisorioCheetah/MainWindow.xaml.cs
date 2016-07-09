@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Threading;
 
 using OxyPlot;
@@ -9,6 +8,7 @@ using OxyPlot.Series;
 using System.Windows;
 using System.IO.Ports;
 using System.Collections.Generic;
+using System.Configuration;
 
 namespace SupervisorioCheetah
 {
@@ -38,6 +38,7 @@ namespace SupervisorioCheetah
             this.DataContext = this;
             plot1.ActualController.UnbindAll();
 
+        
 
             charts.Add(new SingleChart());
             charts[0].listaSensores[0].IsSelected = true;
@@ -50,7 +51,10 @@ namespace SupervisorioCheetah
             charts[1].listaSensores[6].IsSelected = true;
             charts[1].listaSensores[5].IsSelected = true;
 
+            AppConfigFile a = new AppConfigFile();
 
+           // ChartsConfigSection g = ConfigurationManager.GetSection("chartsCollection") as ChartsConfigSection;
+            
 
             // inicia uma lista de lista de dados com o tamanho do enum de sensores
             numeroCanais = Enum.GetNames(typeof(Sensores)).Length;
@@ -311,7 +315,6 @@ namespace SupervisorioCheetah
             {
                 return false;
             }
-
             return true;
         }
 

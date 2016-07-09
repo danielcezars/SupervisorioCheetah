@@ -5,9 +5,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:SupervisorioCheetah"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" d:DesignWidth="300"
+             Height="150">
     <Grid>
-        <ListBox x:Name="ItensListBox" ItemsSource="{Binding listaSensores, Mode=TwoWay}">
+        <ListBox x:Name="ItensListBox" ItemsSource="{Binding listaSensores, Mode=TwoWay}"
+                 Margin="0">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="4" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding TheText}"/>

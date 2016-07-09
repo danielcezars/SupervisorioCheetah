@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SupervisorioCheetah"
         mc:Ignorable="d"
-        Title="Configurar Gráficos" Height="300" Width="300" WindowStartupLocation="CenterScreen">
+        Title="Configurar Gráficos" MinHeight="400" Height="400"
+        MinWidth="500" Width="500" WindowStartupLocation="CenterScreen">
     <Grid>
-        <local:EscolherSensores x:Name="ItensListBox" />
+        <local:EscolherSensores x:Name="ItensListBox" Margin="0,0,0,219" />
     </Grid>
 </Window>

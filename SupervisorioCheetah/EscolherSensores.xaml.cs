@@ -33,10 +33,8 @@ namespace SupervisorioCheetah
 
         public ObservableCollection<BoolStringClass> ListaSensores
         {
-            get
-            { return (ObservableCollection<BoolStringClass>)GetValue(sensorProperty); }
-            set
-            { SetValueDp(sensorProperty, value); }
+            get { return (ObservableCollection<BoolStringClass>)GetValue(sensorProperty); }
+            set { SetValueDp(sensorProperty, value); }
         }
         public static readonly DependencyProperty sensorProperty = DependencyProperty.Register("listaSensores",
             typeof(ObservableCollection<BoolStringClass>), typeof(EscolherSensores), null);
