@@ -6,8 +6,27 @@
         xmlns:local="clr-namespace:SupervisorioCheetah"
         mc:Ignorable="d"
         Title="Configurar Gráficos" MinHeight="400" Height="400"
-        MinWidth="500" Width="500" WindowStartupLocation="CenterScreen">
-    <Grid>
-        <local:EscolherSensores x:Name="ItensListBox" Margin="0,0,0,219" />
-    </Grid>
+        MinWidth="600" Width="600" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
+    <ScrollViewer Name="myScrowViewer">
+        <Grid >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <StackPanel Name="myPanel" Grid.Row="0" >
+                <!--<Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button Height="20" Margin="10" VerticalAlignment="Top" Grid.Column="0" Width="20" />
+                    <StackPanel Grid.Column="1">
+                        <local:EscolherSensores x:Name="ItensListBox"/>
+                    </StackPanel>
+                </Grid>-->
+
+            </StackPanel>
+            <Button Grid.Row="1" Width="20" Height="20" Click="btnAdicionar_Click" Name="btnAdicionar"/>
+        </Grid>
+    </ScrollViewer>
 </Window>

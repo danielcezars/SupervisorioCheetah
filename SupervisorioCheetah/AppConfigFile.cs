@@ -17,50 +17,59 @@ namespace SupervisorioCheetah
 
         public static void addChart(List<SingleChart> chartList)
         {
-            foreach (SingleChart s in chartList)
+            if (chartList != null)
             {
-                addChart(s);
+                foreach (SingleChart s in chartList)
+                {
+                    addChart(s);
+                }
             }
         }
 
         public static void addChart(SingleChart singleChart)
         {
-            string path = System.Reflection.Assembly.GetEntryAssembly().Location;
-
-            if (path.EndsWith(".config", StringComparison.InvariantCultureIgnoreCase))
-            { path = path.Remove(path.Length - 7); }
-
-            Configuration config = ConfigurationManager.OpenExeConfiguration(path);
-
-            int index = 0;
-            while (config.Sections["chart" + index.ToString()] != null)
+            if (singleChart != null)
             {
-                index++;
-            }
+                string path = System.Reflection.Assembly.GetEntryAssembly().Location;
 
-            addSensors(singleChart.listaSensores);
+                if (path.EndsWith(".config", StringComparison.InvariantCultureIgnoreCase))
+                { path = path.Remove(path.Length - 7); }
 
-            if (config.Sections["chart" + index.ToString()] == null)
-            {
-                config.Sections.Add("chart" + index.ToString(), instance);
-                config.Save(ConfigurationSaveMode.Modified);
+                Configuration config = ConfigurationManager.OpenExeConfiguration(path);
+
+                int index = 0;
+                while (config.Sections["chart" + index.ToString()] != null)
+                {
+                    index++;
+                }
+
+                addSensors(singleChart.listaSensores);
+
+                if (config.Sections["chart" + index.ToString()] == null)
+                {
+                    config.Sections.Add("chart" + index.ToString(), instance);
+                    config.Save(ConfigurationSaveMode.Modified);
+                }
+                instance = (ChartSection)config.Sections["chart" + index.ToString()];
             }
-            instance = (ChartSection)config.Sections["chart" + index.ToString()];
         }
         
 
         public static void addSensors(ObservableCollection<BoolStringClass> lista)
         {
-            chartElement ch;
-            instance = new ChartSection();
-
-            foreach (BoolStringClass b in lista)
+            if (lista != null)
             {
-                ch = new chartElement();
-                ch.sensor = b.TheText;
-                ch.isSelected = b.IsSelected.ToString();
+                chartElement ch;
+                instance = new ChartSection();
 
-                instance.myChart.Add(ch);
+                foreach (BoolStringClass b in lista)
+                {
+                    ch = new chartElement();
+                    ch.sensor = b.TheText;
+                    ch.isSelected = b.IsSelected.ToString();
+
+                    instance.myChart.Add(ch);
+                }
             }
         }
 
@@ -85,20 +94,25 @@ namespace SupervisorioCheetah
         
         public static SingleChart getSingleChart(ChartSection instance)
         {
-            ObservableCollection<BoolStringClass> lista = new ObservableCollection<BoolStringClass>();
-
-            foreach (chartElement cht in instance.myChart)
+            if (instance != null)
             {
-                foreach (Sensores s in Enum.GetValues(typeof(Sensores)))
+                ObservableCollection<BoolStringClass> lista = new ObservableCollection<BoolStringClass>();
+
+                foreach (chartElement cht in instance.myChart)
                 {
-                    if (cht.sensor == s.ToString())
+                    foreach (Sensores s in Enum.GetValues(typeof(Sensores)))
                     {
-                        lista.Add(new BoolStringClass { IsSelected = Convert.ToBoolean(cht.isSelected), TheText = cht.sensor });
-                        break;
+                        if (cht.sensor == s.ToString())
+                        {
+                            lista.Add(new BoolStringClass { IsSelected = Convert.ToBoolean(cht.isSelected), TheText = cht.sensor });
+                            break;
+                        }
                     }
                 }
+
+                return new SingleChart(lista);
             }
-            return new SingleChart(lista);
+            else return new SingleChart();
         }
 
         public static List<SingleChart> getAllCharts()

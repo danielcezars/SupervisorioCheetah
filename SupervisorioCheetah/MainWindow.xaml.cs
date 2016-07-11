@@ -37,30 +37,15 @@ namespace SupervisorioCheetah
             InitializeComponent();
             this.DataContext = this;
             plot1.ActualController.UnbindAll();
-
-
-            charts.Add(new SingleChart());
-            charts[0].listaSensores[0].IsSelected = true;
-            charts[0].listaSensores[2].IsSelected = true;
-            charts[0].listaSensores[4].IsSelected = true;
-            charts[0].listaSensores[7].IsSelected = true;
-            charts.Add(new SingleChart());
-            charts[1].listaSensores[3].IsSelected = true;
-            charts[1].listaSensores[8].IsSelected = true;
-            charts[1].listaSensores[6].IsSelected = true;
-            charts[1].listaSensores[5].IsSelected = true;
-
-            ChartSection.addChart(charts);
-
-
+            
             charts = ChartSection.getAllCharts();
 
 
-            string path = System.Reflection.Assembly.GetEntryAssembly().Location + ".config";
+            //string path = System.Reflection.Assembly.GetEntryAssembly().Location + ".config";
 
-            System.Diagnostics.Process proc = new System.Diagnostics.Process();
-            proc.StartInfo = new System.Diagnostics.ProcessStartInfo("Notepad.exe", '\"' + path + '\"');
-            proc.Start();
+            //System.Diagnostics.Process proc = new System.Diagnostics.Process();
+            //proc.StartInfo = new System.Diagnostics.ProcessStartInfo("Notepad.exe", '\"' + path + '\"');
+            //proc.Start();
 
             // inicia uma lista de lista de dados com o tamanho do enum de sensores
             numeroCanais = Enum.GetNames(typeof(Sensores)).Length;
@@ -357,6 +342,15 @@ namespace SupervisorioCheetah
         {
             var t = new ConfigurarGraficos(charts);
             t.ShowDialog();
+            charts = t.charts;
+
+            ChartSection.removeAllCharts();
+            ChartSection.addChart(charts);
+
+            //string path = System.Reflection.Assembly.GetEntryAssembly().Location + ".config";
+            //System.Diagnostics.Process proc = new System.Diagnostics.Process();
+            //proc.StartInfo = new System.Diagnostics.ProcessStartInfo("Notepad.exe", '\"' + path + '\"');
+            //proc.Start();
         }
     }
 }
