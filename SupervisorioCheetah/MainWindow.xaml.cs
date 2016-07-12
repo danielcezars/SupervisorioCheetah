@@ -4,11 +4,12 @@ using System.Threading;
 
 using OxyPlot;
 using OxyPlot.Axes;
+//using OxyPlot.Wpf;
 using OxyPlot.Series;
 using System.Windows;
 using System.IO.Ports;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Windows.Data;
 
 namespace SupervisorioCheetah
 {
@@ -30,16 +31,17 @@ namespace SupervisorioCheetah
         private const int UpdateInterval = 150;
         private bool disposed;
         private readonly Timer timer;
-        private int numberOfSeries;
+        public int TotalNumberOfPoints { get; private set; }
+        public event PropertyChangedEventHandler PropertyChanged;
+
 
         public MainWindow()
         {
             InitializeComponent();
-            this.DataContext = this;
-            plot1.ActualController.UnbindAll();
-            
-            charts = ChartSection.getAllCharts();
+            //plot1.ActualController.UnbindAll();
 
+            charts = ChartSection.getAllCharts();
+            
 
             //string path = System.Reflection.Assembly.GetEntryAssembly().Location + ".config";
 
@@ -58,48 +60,82 @@ namespace SupervisorioCheetah
             abrirComunicação(this.porta, this.baundRate);
 
             this.timer = new Timer(OnTimerElapsed);
+
+            //Plots = new List<PlotModel>();
+            //for (int i = 0; i < 3; i++)
+            //{
+            //    var p = new PlotModel { Title = "Plot " + i };
+            //    p.Series.Add(new FunctionSeries(x => Math.Cos(x * i), 0, 10, 0.01));
+            //    p.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -2, Maximum = 2 });
+            //    Plots.Add(p);
+            //}
+
             this.SetupModel();
+            this.DataContext = this;
         }
+
+        public IList<PlotModel> Plots { get; set; }
 
 
         private void SetupModel()
         {
             this.timer.Change(Timeout.Infinite, Timeout.Infinite);
 
-            PlotModel = new PlotModel();
-            PlotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -2, Maximum = 55 });
+            
+            Plots = new List<PlotModel>();
 
-
-
-
-            this.numberOfSeries = 1;
-
-            for (int i = 0; i < this.numberOfSeries; i++)
+            foreach (SingleChart s in charts)
             {
-                PlotModel.Series.Add(new LineSeries { LineStyle = LineStyle.Solid });
+                var p = new PlotModel() { Title = "chart" + charts.IndexOf(s) };
+                p.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -2, Maximum = 2 });
+                
+                foreach (BoolStringClass b in s.listaSensores)
+                {
+                    if (b.IsSelected)
+                    {
+                        p.Series.Add(new LineSeries
+                        {
+                            LineStyle = LineStyle.Solid,
+                            Title = b.TheText
+                        });
+                    }
+                }
+                Plots.Add(p);
             }
 
-            this.RaisePropertyChanged("PlotModel");
-
+            this.RaisePropertyChanged("Plots");
             this.timer.Change(500, UpdateInterval);
         }
 
-        public int TotalNumberOfPoints { get; private set; }
+        protected void RaisePropertyChanged(string property)
+        {
+            var handler = this.PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(property));
+            }
+        }
 
-        public PlotModel PlotModel { get; private set; }
+        
+        private void updateChartObjects()
+        {
+            
+        }
+
+        
 
         private void OnTimerElapsed(object state)
         {
-            getData();
-
-            lock (this.PlotModel.SyncRoot)
-            {
-                this.plotChart();
-            }
-
-            this.PlotModel.InvalidatePlot(true);
+            
         }
 
+        private void plotChart()
+        {
+            
+        }
+
+
+        #region
         private void getData()
         {
             int tmpRead = 0;
@@ -244,36 +280,6 @@ namespace SupervisorioCheetah
             catch { }
         }
 
-        private void plotChart()
-        {
-            if (dados[0].Count > 0)
-            {
-                for (int i = 0; i < PlotModel.Series.Count; i++)
-                {
-                    var s = (LineSeries)PlotModel.Series[i];
-
-                    // Coloca limite no eixo horizontal
-                    double x = s.Points.Count > 0 ? s.Points[s.Points.Count - 1].X + 1 : 0;
-                    if (s.Points.Count >= 500)
-                        s.Points.RemoveAt(0);
-
-                    // Adiciona valor ao gráfico -------------------------------------------------------------------------
-                    s.Points.Add(new DataPoint(x, dados[0].Dequeue()));
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void RaisePropertyChanged(string property)
-        {
-            var handler = this.PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(property));
-            }
-        }
-
         /// <summary>
         /// Abre a conexão serial.
         /// Se a conexão já está aberta, abre de novo com os novos parametros.
@@ -352,5 +358,6 @@ namespace SupervisorioCheetah
             //proc.StartInfo = new System.Diagnostics.ProcessStartInfo("Notepad.exe", '\"' + path + '\"');
             //proc.Start();
         }
+        #endregion
     }
 }

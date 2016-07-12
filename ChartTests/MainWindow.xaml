@@ -1,24 +1,23 @@
-﻿<Window x:Class="SupervisorioCheetah.MainWindow"
+﻿<Window x:Class="ChartTests.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:oxy="clr-namespace:OxyPlot.Wpf;assembly=OxyPlot.Wpf"
-        Height="500" Width="640"
-        Title="Cheetah"
-        ResizeMode="CanResizeWithGrip"
-        WindowStartupLocation="CenterScreen">
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ChartTests"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
     <Grid>
         <DockPanel>
             <Menu  x:Name="mainMenu" DockPanel.Dock="Top">
                 <MenuItem Header="Xbee"></MenuItem>
                 <MenuItem Header="Arquivo"></MenuItem>
-                <MenuItem Header="Sensores" Click="MenuItem_Click"></MenuItem>
+                <MenuItem Header="Sensores" ></MenuItem>
             </Menu>
             <StatusBar x:Name="statusBar" Height="20" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
                 <StatusBarItem VerticalAlignment="Center">Pronto</StatusBarItem>
             </StatusBar>
             <ScrollViewer Width="Auto" >
-                <!--<oxy:PlotView x:Name="plot1" Model="{Binding PlotModel}"/>-->
-
                 <ItemsControl ItemsSource="{Binding Plots}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -27,10 +26,12 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <oxy:PlotView Name="myPlotView" Model="{Binding}" Height="300" />
+                            <oxy:PlotView Model="{Binding}" Height="300"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <!--<oxy:PlotView x:Name="plot1" Model="{Binding PlotModel}"/>-->
             </ScrollViewer>
         </DockPanel>
     </Grid>
