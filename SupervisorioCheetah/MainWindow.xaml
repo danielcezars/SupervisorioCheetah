@@ -9,7 +9,7 @@
     <Grid>
         <DockPanel>
             <Menu  x:Name="mainMenu" DockPanel.Dock="Top">
-                <MenuItem Header="Xbee"></MenuItem>
+                <MenuItem Header="Xbee" Click="MenuItem_Click_1"></MenuItem>
                 <MenuItem Header="Arquivo"></MenuItem>
                 <MenuItem Header="Sensores" Click="MenuItem_Click"></MenuItem>
             </Menu>
