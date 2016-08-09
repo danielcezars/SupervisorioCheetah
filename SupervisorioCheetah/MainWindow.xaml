@@ -5,17 +5,51 @@
         Height="500" Width="640"
         Title="Cheetah"
         ResizeMode="CanResizeWithGrip"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen" Closing="Window_Closing">
     <Grid>
         <DockPanel>
             <Menu  x:Name="mainMenu" DockPanel.Dock="Top">
                 <MenuItem Header="Xbee" Click="MenuItem_Click_1"></MenuItem>
-                <MenuItem Header="Arquivo"></MenuItem>
+                <MenuItem Header="Arquivo" Click="MenuItem_Click_2"></MenuItem>
                 <MenuItem Header="Sensores" Click="MenuItem_Click"></MenuItem>
             </Menu>
+            
+            
+            
+            
+            
             <StatusBar x:Name="statusBar" Height="20" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
-                <StatusBarItem VerticalAlignment="Center">Pronto</StatusBarItem>
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="240"/>
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+
+                <StatusBarItem Grid.Column="0">
+                    <TextBlock Name="sttbrEstado" Text="" ></TextBlock>
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="1">
+                    <TextBlock Name="sttbrSensores" Text="" ></TextBlock>
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="2">
+                    <TextBlock Name="sttbrConexao" Text=""></TextBlock>
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="3">
+                    <TextBlock Name="sttbarArquivo" Text=""></TextBlock>
+                </StatusBarItem>
             </StatusBar>
+            
+            
+            
+            
+            
             <ScrollViewer Width="Auto" >
                 <!--<oxy:PlotView x:Name="plot1" Model="{Binding PlotModel}"/>-->
 
@@ -27,7 +61,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <oxy:PlotView Name="myPlotView" Model="{Binding}" Height="300" />
+                            <!--<oxy:PlotView Name="myPlotView" Model="{Binding}" Height="300" />-->
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

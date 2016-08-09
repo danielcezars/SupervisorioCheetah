@@ -10,8 +10,8 @@
     using System.Threading;
 
     using OxyPlot;
-    using OxyPlot.Axes;
     using OxyPlot.Series;
+    using OxyPlot.Axes;
 
 namespace SupervisorioCheetah
 {
