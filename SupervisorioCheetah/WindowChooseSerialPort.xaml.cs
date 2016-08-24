@@ -21,9 +21,14 @@ namespace SupervisorioCheetah
     public partial class WindowChooseSerialPort : Window
     {
         public string nameConexao { get; set; }
-        public WindowChooseSerialPort()
+        SerialPort conexao;
+        int frequencia;
+
+        public WindowChooseSerialPort(int frequencia, SerialPort conexao)
         {
             InitializeComponent();
+            this.conexao = conexao;
+            this.frequencia = frequencia;
             cmbxList.ItemsSource = SerialPort.GetPortNames();
             cmbxList.SelectedIndex = 0;
         }
@@ -36,7 +41,27 @@ namespace SupervisorioCheetah
 
         private void btnConect_Click(object sender, RoutedEventArgs e)
         {
-            nameConexao = (string)cmbxList.SelectedValue;
+            if ((string)cmbxList.SelectedValue != string.Empty)
+            {
+                nameConexao = (string)cmbxList.SelectedValue;
+                // Tenta conectar, altera os textos da barra de estados dependendo da resposta ------------------
+                if (Serial.abrirComunicação(nameConexao, frequencia, conexao))
+                {
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("Não foi possível abrir a comunicação!");
+                }
+                // ----------------------------------------------------------------------------------------------
+            }
+            else
+            { MessageBox.Show("Escolha uma porta serial!"); }
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

@@ -11,8 +11,6 @@ namespace SupervisorioCheetah
     /// </summary>
     public partial class EscolherSensores : UserControl, INotifyPropertyChanged
     {
-        private ObservableCollection<BoolStringClass> listaSensores = new ObservableCollection<BoolStringClass>();
-
         public EscolherSensores()
         {
             InitializeComponent();

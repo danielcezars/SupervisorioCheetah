@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.IO.Ports;
 using System.IO;
 using System.Collections.Generic;
-using System.Windows.Data;
+using System.Collections.ObjectModel;
 
 namespace SupervisorioCheetah
 {
@@ -19,70 +19,58 @@ namespace SupervisorioCheetah
     /// </summary>
     public partial class MainWindow : Window
     {
-        private SerialPort conexao { get; set; }
+        private SerialPort conexao = new SerialPort();
+        int numeroCanais = 0;
         private string porta = "COM3";
         private int baundRate = 9600;
-        int numeroCanais = 0;
 
         string path = "";
 
         Queue<double>[] dados;
-        StreamWriter arquivoEscrita;
-        StreamReader arquivoLeitura;
 
         List<SingleChart> charts = new List<SingleChart>();
+        public List<PlotModel> Plots { get; set; }
 
         // try to change might be lower or higher than the rendering interval
         private const int UpdateInterval = 150;
-        private bool disposed;
         private readonly System.Threading.Timer timer;
         public int TotalNumberOfPoints { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
-        enum barraEstados
-        {
-            Carrengando, 
-            Erro,
-            Pronto,
-            Recebendo,
-            Esperando
-        }
+        
 
         public MainWindow()
         {
             InitializeComponent();
-            sttbrEstado.Text = barraEstados.Carrengando.ToString();
-            numeroCanais = Enum.GetNames(typeof(Sensores)).Length;
-            //plot1.ActualController.UnbindAll();
+            //sttbrEstado.Text = barraEstados.Carrengando.ToString();
+            //sttbrConexao.Text = "-";
 
-            charts = ChartSection.getAllCharts();
-
-            path = Directory.GetCurrentDirectory() + "\\dados";
+            // inicia o arquivo de leitura e escrita -----------------------------------------------------------
+            path = Directory.GetCurrentDirectory();
             if(!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
-            sttbarArquivo.Text = path;
+            //sttbarArquivo.Text = path + "\\dados.cvs";
+            // -------------------------------------------------------------------------------------------------
 
-            abrirArquivosEscrita();
-            
-            //string path = System.Reflection.Assembly.GetEntryAssembly().Location + ".config";
-
-            //System.Diagnostics.Process proc = new System.Diagnostics.Process();
-            //proc.StartInfo = new System.Diagnostics.ProcessStartInfo("Notepad.exe", '\"' + path + '\"');
-            //proc.Start();
-
-            // inicia uma lista de lista de dados com o tamanho do enum de sensores
+            // inicia uma lista de lista de dados com o tamanho do enum de sensores ----------------------------
+            numeroCanais = Enum.GetNames(typeof(Sensores)).Length;
             dados = new Queue<double>[numeroCanais];
             for (int i = 0; i < dados.Length; i++)
             {
                 dados[i] = new Queue<double>();
             }
-            conexao = new SerialPort(this.porta, this.baundRate);
-            abrirComunicação(this.porta, this.baundRate);
-
+            // -------------------------------------------------------------------------------------------------
+            // inicia todos os parametro para o aquisição de dados ---------------------------------------------
             this.timer = new System.Threading.Timer(OnTimerElapsed);
-
+            // inicia todos os parametro para os gráficos ------------------------------------------------------
+            charts = ChartSection.getAllCharts();
+            this.SetupModel();
+            this.DataContext = this;
+            // -------------------------------------------------------------------------------------------------
+            
+            #region testes
             //Plots = new List<PlotModel>();
             //for (int i = 0; i < 3; i++)
             //{
@@ -92,41 +80,108 @@ namespace SupervisorioCheetah
             //    Plots.Add(p);
             //}
 
-            this.SetupModel();
-            this.DataContext = this;
-            sttbrEstado.Text = barraEstados.Pronto.ToString();
-            sttbrConexao.Text = "-";
+            //string path = System.Reflection.Assembly.GetEntryAssembly().Location + ".config";
+            //System.Diagnostics.Process proc = new System.Diagnostics.Process();
+            //proc.StartInfo = new System.Diagnostics.ProcessStartInfo("Notepad.exe", '\"' + path + '\"');
+            //proc.Start();
+            #endregion
+            //sttbrEstado.Text = barraEstados.Pronto.ToString();
+            //sttbrConexao.Text = "-";
+        }
+        
+        public void loadCharts(List<SingleChart> charts)
+        {
+            //listaAllCharts = new List<AllCharts>();
+            //foreach(SingleChart s in charts)
+            //{
+            //    addChart(s);
+            //}
         }
 
-        public IList<PlotModel> Plots { get; set; }
-        
+        public void addChart(SingleChart singleChart)
+        {
+            //listaAllCharts.Add(new AllCharts());
+
+            //// Modifica as propridades do controle aqui --------------------------------------------------------
+            ////listaAllCharts[listaAllCharts.Count - 1]
+            //// -------------------------------------------------------------------------------------------------
+
+
+            //myPanel.Children.Add(listaAllCharts[listaAllCharts.Count - 1]);
+        }
+
+        public PlotModel MeuModelo { get; private set; }
         private void SetupModel()
         {
             this.timer.Change(Timeout.Infinite, Timeout.Infinite);
-
             
             Plots = new List<PlotModel>();
 
             foreach (SingleChart s in charts)
             {
-                var p = new PlotModel() { Title = "chart" + charts.IndexOf(s) };
-                p.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -2, Maximum = 2 });
-                
-                foreach (BoolStringClass b in s.listaSensores)
+                MeuModelo = new PlotModel();
+
+                MeuModelo.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -100, Maximum = 100 });
+
+                // Adiciona a série para cada sensor --------------------------------------------------------------
+                foreach (BoolStringClass b in charts[0].listaSensores)
                 {
                     if (b.IsSelected)
                     {
-                        p.Series.Add(new LineSeries
-                        {
-                            LineStyle = LineStyle.Solid,
-                            Title = b.TheText
-                        });
+                        MeuModelo.Series.Add(new LineSeries { LineStyle = LineStyle.Solid, Title = b.TheText });
                     }
                 }
-                Plots.Add(p);
+                // -------------------------------------------------------------------------------------------------
+
+                Plots.Add(MeuModelo);
             }
 
-            this.RaisePropertyChanged("Plots");
+            #region
+
+            //listaAllCharts = new List<AllCharts>();
+            //listaGraficos = new ObservableCollection<PlotModel>();
+            //Plots = new List<PlotModel>();
+
+            //foreach (SingleChart s in charts)
+            //{
+            //    var p = new PlotModel() { Title = "chart" + charts.IndexOf(s) };
+            //    p.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -2, Maximum = 2 });
+
+            //    // Adiciona a série para cada sensor --------------------------------------------------------------
+            //    foreach (BoolStringClass b in s.listaSensores)
+            //    {
+            //        if (b.IsSelected)
+            //        {
+            //            p.Series.Add(new LineSeries
+            //            {
+            //                LineStyle = LineStyle.Solid,
+            //                Title = b.TheText
+            //            });
+            //        }
+            //    }
+            //    // -------------------------------------------------------------------------------------------------
+
+            //    listaGraficos.Add(p);
+            //    Plots.Add(p);
+
+            //    var v = (LineSeries)Plots[Plots.Count - 1].Series[0];
+            //    v.Points.Add(new DataPoint(0, 0));
+            //    v.Points.Add(new DataPoint(1, 1));
+            //    v.Points.Add(new DataPoint(2, 2));
+            //    v.Points.Add(new DataPoint(3, 3));
+
+            //    listaAllCharts.Add(new AllCharts());
+            //    listaAllCharts[listaAllCharts.Count - 1].ItensListBox.ItemsSource = listaGraficos;
+
+            //    myPanel.Children.Add(listaAllCharts[listaAllCharts.Count - 1]);
+            //}
+            #endregion
+
+            //graficos.ItensListBox.ItemsSource = Plots;
+            //meusGraficos.Children.Add(graficos);
+
+            this.RaisePropertyChanged("graficos");
+
             this.timer.Change(500, UpdateInterval);
         }
 
@@ -143,8 +198,19 @@ namespace SupervisorioCheetah
         {
             
         }
-        
+
         private void OnTimerElapsed(object state)
+        {
+            getData();
+
+            lock (this.MeuModelo.SyncRoot)
+            {
+                this.plotChart();
+            }
+
+            this.MeuModelo.InvalidatePlot(true);
+        }
+        private void getData()
         {
             #region Variáveis Maquina de estado
             int tmpRead = 0;
@@ -158,7 +224,7 @@ namespace SupervisorioCheetah
             {
                 if (conexao.IsOpen)
                 {
-                    sttbrEstado.Text = barraEstados.Recebendo.ToString();
+                    //sttbrEstado.Text = barraEstados.Recebendo.ToString();
                     while (conexao.BytesToRead > 0)
                     {
                         #region Nova Maquina de Estado
@@ -275,8 +341,7 @@ namespace SupervisorioCheetah
                                 {
                                     dado |= (tmpRead & 0x1F); // Recebe os 5 digitos menos significativos
                                     dados[canal].Enqueue(dado);
-
-                                    arquivos[canal].WriteLine(dado);
+                                    
                                 }
                                 estado = 0;
                                 dado = 0;
@@ -285,122 +350,66 @@ namespace SupervisorioCheetah
                         }
                         #endregion
                     }
+
+
+                    //ArquivoTxt.salvaArquivo(path, dados);
                 }
                 else
                 {
-                    sttbrEstado.Text = barraEstados.Erro.ToString();
+                    //sttbrEstado.Text = barraEstados.Recebendo.ToString();
                 }
             }
             catch
             {
-                //sttbrEstado.Text = barraEstados.Erro.ToString();
-
-            }
-        }
-
-        void abrirArquivosEscrita()
-        {
-            try
-            {
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-                foreach (Sensores s in Enum.GetValues(typeof(Sensores)))
-                {
-                    arquivoEscrita = new StreamWriter(File.OpenWrite(path + "\\dados.cvs"));
-                }
-            }
-            catch { }
-        }
-
-        void fecharArquivosEscrita()
-        {
-            try
-            {
-                foreach (StreamWriter s in arquivosEscrita)
-                {
-                    s.Close();
-                }
-            }
-            catch { }
-        }
-
-        void abirArquivosLeitura()
-        {
-            string[] f = Directory.GetFiles(path, "*.txt");
-
-            foreach (string s in f)
-            {
-                //arquivosLeitura[]
+               // sttbrEstado.Text = barraEstados.Erro.ToString();
             }
         }
         
         private void plotChart()
         {
-            
-        }
-        
-        /// <summary>
-        /// Abre a conexão serial.
-        /// Se a conexão já está aberta, abre de novo com os novos parametros.
-        /// Caso haja erro, lança exceção - InvalidOperationException.
-        /// </summary>
-        /// <param name="_nome"></param>
-        /// <param name="_frequencia"></param>
-        public bool abrirComunicação(string _nome, int _frequencia)
-        {
-            try
+            if (dados[0].Count > 0)
             {
-                if (!conexao.IsOpen)
+                for (int i = 0; i < MeuModelo.Series.Count; i++)
                 {
-                    conexao = new SerialPort(_nome, _frequencia);
-                    conexao.Open();
-                }
-                else
-                {
-                    conexao.Close();
-                    conexao.PortName = _nome;
-                    conexao.BaudRate = _frequencia;
-                    conexao.Open();
-                }
+                    var s = (LineSeries)MeuModelo.Series[i];
 
-                this.porta = _nome;
-                this.baundRate = _frequencia;
+                    // Coloca limite no eixo horizontal
+                    double x = s.Points.Count > 0 ? s.Points[s.Points.Count - 1].X + 1 : 0;
+                    if (s.Points.Count >= 200)
+                        s.Points.RemoveAt(0);
 
-                sttbrConexao.Text = conexao.PortName;
-                sttbrEstado.Text = barraEstados.Pronto.ToString();
+                    if (dados[0].Count > 0)
+                    {
+                        // Adiciona valor ao gráfico -------------------------------------------------------------------------
+                        s.Points.Add(new DataPoint(x, dados[0].Dequeue()));
+                    }
+                }
             }
-            catch
-            {
-                sttbrEstado.Text = barraEstados.Erro.ToString();
-                sttbrConexao.Text = "-";
-                return false;
-            }
-            return true;
         }
         
-        public void fecharComunicação()
+        private void MenuItem_Click_1(object sender, RoutedEventArgs e)
         {
-            conexao.Close();
+            //sttbrEstado.Text = barraEstados.Esperando.ToString();
+            var t = new WindowChooseSerialPort(baundRate, conexao);
+            t.ShowDialog();
 
-            sttbrEstado.Text = barraEstados.Pronto.ToString();
-            sttbrConexao.Text = "-";
+            porta = t.nameConexao;
+            //sttbrEstado.Text = barraEstados.Pronto.ToString();
         }
-        
+
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
-            sttbrEstado.Text = barraEstados.Esperando.ToString();
+            //sttbrEstado.Text = barraEstados.Esperando.ToString();
             var t = new ConfigurarGraficos(charts);
             t.ShowDialog();
 
-            sttbrEstado.Text = barraEstados.Carrengando.ToString();
+            //sttbrEstado.Text = barraEstados.Carrengando.ToString();
             charts = t.charts;
 
             ChartSection.removeAllCharts();
             ChartSection.addChart(charts);
 
-            sttbrEstado.Text = barraEstados.Pronto.ToString();
+            //sttbrEstado.Text = barraEstados.Pronto.ToString();
 
             //string path = System.Reflection.Assembly.GetEntryAssembbly().Location + ".config";
             //System.Diagnostics.Process proc = new System.Diagnostics.Process();
@@ -408,33 +417,24 @@ namespace SupervisorioCheetah
             //proc.Start();
         }
 
-        private void MenuItem_Click_1(object sender, RoutedEventArgs e)
-        {
-
-            sttbrEstado.Text = barraEstados.Esperando.ToString();
-            var t = new WindowChooseSerialPort();
-            t.ShowDialog();
-
-            sttbrEstado.Text = barraEstados.Carrengando.ToString();
-            abrirComunicação(t.nameConexao, baundRate);
-        }
-
         private void MenuItem_Click_2(object sender, RoutedEventArgs e)
         {
-            sttbrEstado.Text = barraEstados.Esperando.ToString();
+            //sttbrEstado.Text = barraEstados.Esperando.ToString();
+            // --------------------------------------------------------------------
             var t = new FolderBrowserDialog();
-            t.ShowDialog();
-
-            path = t.SelectedPath;
-
-            sttbrEstado.Text = barraEstados.Pronto.ToString();
-            sttbarArquivo.Text = path;
+            t.ShowNewFolderButton = true;
+            if (t.ShowDialog() != System.Windows.Forms.DialogResult.Cancel)
+            {
+                path = t.SelectedPath;
+            }
+            //---------------------------------------------------------------------
+           // sttbrEstado.Text = barraEstados.Pronto.ToString();
+            //sttbarArquivo.Text = path;
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            fecharArquivosEscrita();
-            fecharComunicação();
+            Serial.fecharComunicação(conexao);
         }
     }
 }

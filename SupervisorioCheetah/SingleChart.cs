@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using OxyPlot;
+using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SupervisorioCheetah
 {
@@ -33,5 +30,4 @@ namespace SupervisorioCheetah
         public string TheText { get; set; }
         public bool IsSelected { get; set; }
     }
-
 }

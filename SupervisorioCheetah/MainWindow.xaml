@@ -1,6 +1,7 @@
 ﻿<Window x:Class="SupervisorioCheetah.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:local ="clr-namespace:SupervisorioCheetah"
         xmlns:oxy="clr-namespace:OxyPlot.Wpf;assembly=OxyPlot.Wpf"
         Height="500" Width="640"
         Title="Cheetah"
@@ -10,14 +11,9 @@
         <DockPanel>
             <Menu  x:Name="mainMenu" DockPanel.Dock="Top">
                 <MenuItem Header="Xbee" Click="MenuItem_Click_1"></MenuItem>
-                <MenuItem Header="Arquivo" Click="MenuItem_Click_2"></MenuItem>
+                <MenuItem Header="Escolher Local" Click="MenuItem_Click_2"></MenuItem>
                 <MenuItem Header="Sensores" Click="MenuItem_Click"></MenuItem>
-            </Menu>
-            
-            
-            
-            
-            
+            </Menu>            
             <StatusBar x:Name="statusBar" Height="20" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
                 <StatusBar.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -45,23 +41,11 @@
                     <TextBlock Name="sttbarArquivo" Text=""></TextBlock>
                 </StatusBarItem>
             </StatusBar>
-            
-            
-            
-            
-            
-            <ScrollViewer Width="Auto" >
-                <!--<oxy:PlotView x:Name="plot1" Model="{Binding PlotModel}"/>-->
-
+            <ScrollViewer Width="Auto">
                 <ItemsControl ItemsSource="{Binding Plots}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Vertical" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <!--<oxy:PlotView Name="myPlotView" Model="{Binding}" Height="300" />-->
+                            <oxy:PlotView Model="{Binding}" Height="300" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

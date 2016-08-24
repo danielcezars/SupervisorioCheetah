@@ -34,11 +34,6 @@ namespace SupervisorioCheetah
 
             this.charts = charts;
 
-            //ItensListBox.ItensListBox.ItemsSource = charts[0].listaSensores;
-            //ItensListBox1.ItensListBox.ItemsSource = charts[1].listaSensores;
-            //ItensListBox2.ItensListBox.ItemsSource = charts[2].listaSensores;
-            //ItensListBox3.ItensListBox.ItemsSource = charts[3].listaSensores;
-
             loadCharts(charts);
         }
 
@@ -69,10 +64,12 @@ namespace SupervisorioCheetah
         
         public void addChart(SingleChart s)
         {
+            // Configura o grid --------------------------------------------------------------------------------
             listaGrids.Add(new Grid());
             listaGrids[listaGrids.Count - 1].ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
             listaGrids[listaGrids.Count - 1].ColumnDefinitions.Add(new ColumnDefinition());
-
+            // -------------------------------------------------------------------------------------------------
+            // Configura o Botão -------------------------------------------------------------------------------
             listaBtnRemover.Add(new Button()
             {
                 Height = 20,
@@ -81,8 +78,8 @@ namespace SupervisorioCheetah
                 Margin = new Thickness(10)
             });
             listaBtnRemover[listaBtnRemover.Count - 1].Click += new RoutedEventHandler(btn_Click);
-
             Grid.SetColumn(listaBtnRemover[listaGrids.Count - 1], 0);
+            // -------------------------------------------------------------------------------------------------
 
             listaStackPanel.Add(new StackPanel());
             listaEscolherSensores.Add(new EscolherSensores());
